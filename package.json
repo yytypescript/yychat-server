@@ -28,7 +28,7 @@
     "lint:tslint": "tslint -p tsconfig.json -c tslint.json -t codeFrame",
     "lint:tslint:fix": "tslint -p tsconfig.json -c tslint.json -t codeFrame --fix",
     "test": "jest",
-    "precommit": "run-s lint-staged test"
+    "precommit": "run-s lint-staged"
   },
   "lint-staged": {
     "**/package.json": [
