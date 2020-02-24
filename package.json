@@ -15,13 +15,20 @@
     "test": "test"
   },
   "scripts": {
+    "start": "node lib/index.js",
+    "start:dev": "ts-node-dev src/index.ts",
+    "clean": "git clean -Xdf --exclude='!.idea/**/*' --exclude='!node_modules/' --exclude='!**/node_modules/**/*'",
+    "clean:all": "git clean -Xdf --exclude='!.idea/**/*'",
+    "clean:all:dry": "git clean -Xdfn --exclude='!.idea/**/*'",
+    "clean:dry": "git clean -Xdfn --exclude='!.idea/**/*' --exclude='!node_modules/' --exclude='!**/node_modules/**/*'",
     "build": "tsc -p tsconfig.json",
     "format": "run-s lint:tsc lint:*:fix",
     "lint": "run-s lint:*",
     "lint:tsc": "tsc --noEmit --pretty",
     "lint:tslint": "tslint -p tsconfig.json -c tslint.json -t codeFrame",
     "lint:tslint:fix": "tslint -p tsconfig.json -c tslint.json -t codeFrame --fix",
-    "test": "jest"
+    "test": "jest",
+    "precommit": "run-s lint-staged test"
   },
   "lint-staged": {
     "**/package.json": [
