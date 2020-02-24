@@ -1,0 +1,83 @@
+{
+  "name": "@yytypescript/yychat",
+  "version": "1.0.0",
+  "description": "A chat server",
+  "license": "MIT",
+  "author": "suin <suinyeze@gmail.com>",
+  "files": [
+    "lib",
+    "src"
+  ],
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "format": "run-s lint:tsc lint:*:fix",
+    "lint": "run-s lint:*",
+    "lint:tsc": "tsc --noEmit --pretty",
+    "lint:tslint": "tslint -p tsconfig.json -c tslint.json -t codeFrame",
+    "lint:tslint:fix": "tslint -p tsconfig.json -c tslint.json -t codeFrame --fix",
+    "test": "jest"
+  },
+  "lint-staged": {
+    "**/package.json": [
+      "sort-package-json",
+      "git add"
+    ],
+    "*.{ts,tsx}": [
+      "npm run format",
+      "git add"
+    ]
+  },
+  "jest": {
+    "globals": {
+      "ts-jest": {
+        "tsConfig": "tsconfig.json"
+      }
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "js"
+    ],
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$",
+    "transform": {
+      "^.+\\.ts$": "ts-jest"
+    }
+  },
+  "devDependencies": {
+    "@types/jest": "^25.1.3",
+    "@types/koa": "^2.11.1",
+    "@types/koa-bodyparser": "^4.3.0",
+    "@types/koa-morgan": "^1.0.4",
+    "@types/koa-route": "^3.2.4",
+    "@types/koa-websocket": "^5.0.4",
+    "conventional-changelog-angular-all": "^1.7.0",
+    "husky": "^4.2.3",
+    "jest": "^25.1.0",
+    "lint-staged": "^10.0.7",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^1.19.1",
+    "sort-package-json": "^1.40.0",
+    "ts-jest": "^25.2.1",
+    "ts-node": "^8.6.2",
+    "ts-node-dev": "^1.0.0-pre.44",
+    "tslint": "^6.0.0",
+    "tslint-config-prettier": "^1.18.0",
+    "tslint-plugin-prettier": "^2.1.0",
+    "typescript": "^3.8.2",
+    "wscat": "^4.0.0"
+  },
+  "dependencies": {
+    "@types/koa-json": "^2.0.18",
+    "koa": "^2.11.0",
+    "koa-bodyparser": "^4.2.1",
+    "koa-json": "^2.0.2",
+    "koa-morgan": "^1.0.1",
+    "koa-route": "^3.2.0",
+    "koa-websocket": "^6.0.0"
+  }
+}

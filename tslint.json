@@ -1,0 +1,22 @@
+{
+  "defaultSeverity": "error",
+  "extends": ["tslint:recommended", "tslint-plugin-prettier", "tslint-config-prettier"],
+  "jsRules": {"no-unused-expression": true},
+  "rules": {
+    "arrow-parens": [true, "ban-single-arg-parens"],
+    "interface-name": [false],
+    "linebreak-style": [true, "LF"],
+    "max-line-length": [true, {"ignore-pattern": "<\\w+>"}],
+    "member-access": [true, "no-public"],
+    "no-any": true,
+    "no-irregular-whitespace": true,
+    "number-literal-format": true,
+    "prettier": true,
+    "quotemark": [true, "single", "jsx-double"],
+    "variable-name": [true, "allow-leading-underscore"],
+    "object-literal-sort-keys": false,
+    "interface-over-type-literal": false,
+    "no-console": false
+  },
+  "rulesDirectory": []
+}
