@@ -4,6 +4,7 @@ import websockify from 'koa-websocket';
 import morgan from 'koa-morgan';
 import bodyParser from 'koa-bodyparser';
 import json from 'koa-json';
+import cors from '@koa/cors';
 
 type ChannelId = number;
 
@@ -18,19 +19,72 @@ interface Message {
   readonly text: string;
 }
 
-let nextChannelId = 1;
+class Channels {
+  private readonly channels = new Map<ChannelId, Channel>();
+  private nextChannelId = 1;
 
-function issueNextChannelId(): ChannelId {
-  return nextChannelId++;
+  create({ name }: { readonly name: string }): Channel {
+    this.validateChannelName(name);
+    const channel: Channel = {
+      id: this.issueNextChannelId(),
+      name,
+      messages: [],
+    };
+    this.channels.set(channel.id, channel);
+    return channel;
+  }
+
+  changeName({ id, name }: { readonly id: number; name: string }): Channel {
+    const channel = this.channels.get(id);
+    if (!channel) {
+      throw new Error('チャネルが存在しません。');
+    }
+    this.validateChannelName(name);
+    const newChannel = { ...channel, name };
+    this.channels.set(id, newChannel);
+    return newChannel;
+  }
+
+  getChannel(id: number): Channel | undefined {
+    return this.channels.get(id);
+  }
+
+  getAllChannels(): Channel[] {
+    return [...this.channels.values()];
+  }
+
+  deleteChannel(id: number): void {
+    this.channels.delete(id);
+  }
+
+  private validateChannelName(name: string): void {
+    if (name.length === 0) {
+      throw new Error('チャネル名は1文字以上にしてください。');
+    }
+    if (name.length > 15) {
+      throw new Error('チャネル名は15文字以内にしてください。');
+    }
+    if (!/^[A-Za-z0-9_-]*$/.test(name)) {
+      throw new Error('チャネル名は半角英数にしてください。');
+    }
+    if (
+      Array.from(this.channels.values()).some(channel => channel.name === name)
+    ) {
+      throw new Error('すでに存在しているチャネル名は使用できません。');
+    }
+  }
+
+  private issueNextChannelId(): ChannelId {
+    return this.nextChannelId++;
+  }
 }
 
-const channels = new Map<ChannelId, Channel>();
-const general = { id: issueNextChannelId(), name: 'general', messages: [] };
-const random = { id: issueNextChannelId(), name: 'random', messages: [] };
-channels.set(general.id, general);
-channels.set(random.id, random);
+const channels = new Channels();
+channels.create({ name: 'general' });
+channels.create({ name: 'random' });
 
 const app = websockify(new Koa());
+app.use(cors());
 app.use(morgan('dev'));
 app.use(bodyParser());
 app.use(json());
@@ -56,23 +110,26 @@ app.use(
       ctx.throw(400, e.message);
       return;
     }
-    const channel = { id: issueNextChannelId(), name, messages: [] };
-    channels.set(channel.id, channel);
-    ctx.body = channel;
+    try {
+      ctx.body = channels.create({ name });
+    } catch (e) {
+      ctx.throw(400, e.message);
+    }
   }),
 );
 
 // チャンネル一覧
 app.use(
   route.get('/channels', ctx => {
-    ctx.body = [...channels.values()];
+    ctx.body = channels.getAllChannels();
   }),
 );
 
 // チャンネル設定変更
 app.use(
-  route.patch('/channels/:id', (ctx, id: string) => {
-    const channel = channels.get(Number(id));
+  route.patch('/channels/:id', (ctx, idString: string) => {
+    const id = Number(idString);
+    const channel = channels.getChannel(id);
     if (!channel) {
       ctx.throw(404, 'Channel not found');
       return;
@@ -84,20 +141,24 @@ app.use(
       ctx.throw(400, e.message);
       return;
     }
-    channels.set(channel.id, { ...channel, name: newName });
-    ctx.body = '';
+    try {
+      ctx.body = channels.changeName({ id, name: newName });
+    } catch (e) {
+      ctx.throw(400, e.message);
+    }
   }),
 );
 
 // チャンネル削除
 app.use(
-  route.delete('/channels/:id', (ctx, id: string) => {
-    const channel = channels.get(Number(id));
+  route.delete('/channels/:id', (ctx, idString: string) => {
+    const id = Number(idString);
+    const channel = channels.getChannel(id);
     if (!channel) {
       ctx.throw(404, 'Channel not found');
       return;
     }
-    channels.delete(Number(id));
+    channels.deleteChannel(id);
     ctx.body = '';
   }),
 );
@@ -140,7 +201,7 @@ app.ws.use(
         );
         return;
       }
-      const channel = channels.get(data.channelId);
+      const channel = channels.getChannel(data.channelId);
       if (!channel) {
         ctx.websocket.send(
           JSON.stringify({
@@ -159,7 +220,7 @@ app.ws.use(
   }),
 );
 
-app.listen(3000);
+app.listen(3001);
 
 function assertChannelName(name: unknown): asserts name is string {
   if (typeof name === 'undefined') {
@@ -167,9 +228,6 @@ function assertChannelName(name: unknown): asserts name is string {
   }
   if (typeof name !== 'string') {
     throw new Error('name parameter is not a string value');
-  }
-  if (name.length === 0) {
-    throw new Error('チャンネル名を入力してください。');
   }
 }
 
